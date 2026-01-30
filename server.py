@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 import yt_dlp
 
 app = FastAPI()
@@ -9,29 +10,18 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {"status": "ok"}
 
 @app.get("/download")
 def download(url: str):
+
     ydl_opts = {
-        "quiet": True,
-        "skip_download": True,
-        "format": "best"
+        "format": "best",
+        "quiet": True
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
-        formats = []
+        video_url = info["url"]
 
-        for f in info["formats"]:
-            if f.get("url"):
-                formats.append({
-                    "quality": f.get("format_note"),
-                    "ext": f.get("ext"),
-                    "url": f.get("url")
-                })
-
-    return {
-        "title": info.get("title"),
-        "formats": formats
-    }
+    return RedirectResponse(video_url)    }
